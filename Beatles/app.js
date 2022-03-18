@@ -1,5 +1,6 @@
 const http = require("http");
 const fs = require("fs");
+
 const beatles = [
   {
     name: "John Lennon",
@@ -26,39 +27,39 @@ const beatles = [
       "http://cp91279.biography.com/BIO_Bio-Shorts_0_Ringo-Starr_SF_HD_768x432-16x9.jpg",
   },
 ];
+
 http
   .createServer((req, res) => {
-    const params = req.url
-      .replace("/api", "")
-      .replace("/", "")
-      .replace("%20", "");
-
     if (req.url === "/") {
+      //Si la URL es / devolvemos el HTML
       res.writeHead(200, { "Content-Type": "text/html" });
-      let html = fs.readFileSync(__dirname + "/index.html", "utf-8");
+      const html = fs.readFileSync(__dirname + "/index.html");
       res.end(html);
-    } else if (req.url === "/api") {
+    }
+    if (req.url === "/api") {
+      //Si la URL es / devolvemos el html
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(beatles));
-    } else if (!req.url.includes("/api")) {
+    }
+    if (req.url.includes("/api/")) {
+      const params = req.url.replace("%20", " ").replace("/api/", "");
+      res.writeHead(200, { "Content-Type": "application/json" });
+      const beatle = beatles.find((item) => item.name === params);
+      res.end(JSON.stringify(beatle));
+      console.log(params);
+    }
+    if (!req.url.includes("/api")) {
+      res.writeHead(200, { "Content-Type": "text/html" });
+      let html = fs.readFileSync(__dirname + "/beatle.html", "utf8");
       const params = req.url.replace("%20", " ").replace("/", "");
       const beatle = beatles.find((item) => item.name === params);
       if (beatle) {
-        res.writeHead(200, { "Content-Type": "text/html" });
-        let html = fs.readFileSync(__dirname + "/beatle.html", "utf8"); //Codificamos el buffer para que sea una String
-        html = html.replace("{beatleName}", beatle.name); // Usamos el método replace es del objeto String
-        html = html.replace("{birthDate}", beatle.birthdate); // Usamos el método replace es del objeto String
-        html = html.replace("{imgBeatle}", beatle.profilePic); // Usamos el método replace es del objeto String
+        html = html.replace("{name}", beatle.name);
+        html = html.replace("{birthdate}", beatle.birthdate);
+        html = html.replace("{profilePic}", beatle.profilePic);
         res.end(html);
-      } else {
-        res.end(`<h1>No existe ${params}</h1>`);
       }
-    } else if (`/api/${params.includes(beatles.name)}`) {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      const beatle = beatles.find((beatle) => (beatle.name = params));
-      res.end(JSON.stringify(beatle));
-    } else {
-      res.end("<h1>Error</h1>");
     }
   })
-  .listen(3000, () => console.log("Server running"));
+
+  .listen(1337, "localhost");
